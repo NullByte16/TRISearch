@@ -4,6 +4,7 @@ import Logic
 from tkinter import *
 from tkinter import ttk
 from tkinter.ttk import *
+import threading
 
 customtkinter.set_appearance_mode("dark")
 customtkinter.set_default_color_theme("blue")
@@ -36,9 +37,10 @@ class GUICtk():
              "view_topic": CTkFrame(master = self.window),
          }
          # Feed frame is added after self.frames initalization, because it's master is the dashboard frame, and that must be initialized first.
-         self.frames["feed"] = CTkFrame(master = self.frames["dashboard"], fg_color = "#2A2D2E")
+         self.frames["feed"] = CTkFrame(master = self.frames["dashboard"], fg_color = "#2A2D2E", width = 500)
                   
          self.init_dashboard()
+         
          self.init_feed()
          self.init_new_topic()
          self.init_view_topic()
@@ -66,18 +68,24 @@ class GUICtk():
         topic_buttons = []
         
         X = 20
-        Y = 30
+        Y = 50
         
         for index, title in enumerate(Logic.db.list_collection_names()):
-            topic_buttons.append(CTkButton(master = self.frames["feed"], text = title, text_font = ("Montserrat", 10, "bold")))
-            topic_buttons[index].place(x = X, y = 50 + index * Y, width = 40)
+            topic_buttons.append([CTkButton(master = self.frames["feed"], text = title, text_font = ("Montserrat", 10, "bold")), 
+                                  CTkButton(master = self.frames["feed"], text = "-", text_font = ("Montserrat", 10, "bold"), fg_color = "red",
+                                            command = lambda arg = title: self.remove_topic(arg))])
+            topic_buttons[index][0].place(x = X, y = 50 + index * Y, width = 100)
+            topic_buttons[index][1].place(x = 425, y = 50 + index * Y, width = 45)
+            
+            
     
     # Initialization method for new_topic frame.
     def init_new_topic(self):
         self.frames["new_topic"].grid(row = 0, column = 0, sticky = "nsew")
         
-        source_list = ["YouTube", "Google", "Ynet", "Scientific American", "Jerusalem Post", "Calcalist"]
-        source_checks = {}
+        source_list = ["YouTube", "Google", "Ynet", "Scientific American", "Jerusalem Post", "Calcalist"] # String list of source names.
+        source_checks = {} # Dictionary of source checkboxes.
+        source_vars = [] # List of booleanVar variables to check if checkboxes are checked or not.v--> EXPERIMENTAL CODE
         
         # Back button. Returns user to dashboard frame.
         back = CTkButton(master = self.frames["new_topic"], text = "Back", text_font = ("Monserrat", 10), command = self.frames["dashboard"].tkraise)
@@ -113,7 +121,7 @@ class GUICtk():
         
         # Submit button.
         submit = CTkButton(master = self.frames["new_topic"], text = "Submit", text_font = ("Montserrat", 10), width = 50,
-                            command = lambda title = title, keywords = keywords_entry.get(), source_checks = source_checks: self.organize_input(title, keywords, source_checks))
+                            command = lambda: self.organize_input(title_entry.get(), keywords_entry.get(), source_checks))
         submit.place(x = 225, y = Y + 50)
         
     # Initialization method for view_topic frame.
@@ -130,9 +138,30 @@ class GUICtk():
     # 1. Calls Logic.add_topic to add new topic to database and retrieve information.
     # 2. Adds button for viewing topic information to feed frame list.
     def add_topic(self, title: str, keywords: list, sources: list):
-        Logic.add_topic(title, keywords, sources)
+        params = {'title': title,
+                  'keywords': keywords,
+                  'sources': sources
+                  }
+        
+        add_thread = threading.Thread(target = Logic.add_topic, kwargs=params)
+        add_thread.start() # Run Logic.add_topic in a thread so that user can continue using the GUI while information is retrieved.
+        
         self.init_feed()
-        self.frames["dashbaord"].tkraise()
+        self.frames["dashboard"].tkraise()
+    
+    def remove_topic(self, title: str):
+        print(title)
+        
+        original_len = len(Logic.db.list_collection_names())
+        remover = threading.Thread(target = Logic.remove_topic, args = [title])
+        remover.start() # Run Logic.remove_topic in a thread so that user can continue to use the GUI while information is deleted.
+        
+        # While loop working as event handler so dashboard updates the moment record is removed from the database.
+        # This is so we can know precisely when during the run of the remover thread we should call self.init_feed().
+        while(original_len == len(Logic.db.list_collection_names())):
+            continue
+        
+        self.init_feed()
         
     
     ##########################################################################################
@@ -149,7 +178,7 @@ class GUICtk():
     def checked_sources(self, source_checks: dict[CTkCheckBox]) -> list[str]:
         checked = []
         for checkbox in source_checks:
-            if source_checks[checkbox].getboolean(s):
+            if source_checks[checkbox].variable.get():
                 print(source_checks[checkbox].text)
                 checked.append(source_checks[checkbox].text)
         return checked
