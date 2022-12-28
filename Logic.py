@@ -34,7 +34,7 @@ def add_topic(title: str, keywords: list, sources: list):
         })
     col.insert_many(docs)
     
-def delete_topic(title: str) -> bool:
+def remove_topic(title: str) -> bool:
     for_deletion = topics[title]
     if for_deletion.delete():
         db.drop_collection(title)

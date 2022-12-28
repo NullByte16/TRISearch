@@ -1,7 +1,6 @@
 from Research import Research
 import os
 import shutil
-import threading
 
 class Topic():
     def __init__(self, title: str, keywords: list, sources: list):
@@ -19,11 +18,8 @@ class Topic():
         os.chdir(self.path)
 
         # Retrieve information and place in directory. Methods are run in a thread to allow user to continue using the GUI while information is retrieved.
-        article_thread = threading.Thread(target = self.research.scrape_art())
-        article_thread.start()
-        
-        video_thread = threading.Thread(target = self.research.scrape_vid())
-        video_thread.start()
+        self.research.scrape_art()
+        self.research.scrape_vid()
         
         # Switch back to main directory.
         os.chdir('..')
