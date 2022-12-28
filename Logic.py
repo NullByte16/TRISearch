@@ -2,32 +2,47 @@
 # For example: "submit" button on the "New Topic" page, implemented graphically in Graphics.py,
 # will activate a function in Logic.py when clicked.
 from Topic import Topic
+from Info import Info
+import pymongo
+import os
+
+mdb_client = pymongo.MongoClient("mongodb://localhost:27017")
+db = mdb_client["TRISearch"]
+topics = {}
 
 def fetch(arg: str) -> list:
-    result = []
-    checker = False # Tests if result recevies any name variable from the Topic argument's infos. If yes, changes to true.
-    for t in topics:
-        if t.title == arg and t.research.infos != None:
-            for name in t.research.infos:
-                result.append(name.name[:20] + "...")
-    if result == []:
+    col = db.get_collection(arg)
+    names = []
+    for doc in col.find():
+        names.append(doc["Name"])
+
+    return names
+
+def add_topic(title: str, keywords: list, sources: list):
+    if sources == []:
         return None
-    return result
-
-
-# Test code for "No information found" popup window.
-from Info import Info
-topics = []
-t = Topic("Dog Training", ["Dogs", "Dog potty training"], [])
-t.research.infos = None
-topics.append(Topic("Ukraine War", ["Ukraine War"], []))
-topics.append(t)
-
-
-# Create new topic
-def new_topic(title: str, keywords: list, sources: list) -> Topic:
+    topics[title] = Topic(title, keywords, sources)
+    col = db[title]
+    docs = []
+    for info in topics[title].research.infos:
+        docs.append({
+            "Name": info.name,
+            "Thumbnail": info.thumbnail,
+            "Type": info.type,
+            "Link": info.url,
+            "File": info.file
+        })
+    col.insert_many(docs)
     
-    t = Topic(title, keywords, sources)
-    topics.append(t)
-    return t
-    
+def delete_topic(title: str) -> bool:
+    for_deletion = topics[title]
+    if for_deletion.delete():
+        db.drop_collection(title)
+        topics.pop(title)
+        if not db.list_collection_names().__contains__(for_deletion):
+            return True
+    return False
+
+
+"""def remove_test():
+    db["test"].drop()""" # Function corresponds with the rm_test_btn in function init_new_topic_frame in GraphicCtk

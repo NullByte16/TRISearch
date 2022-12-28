@@ -34,6 +34,7 @@ class GUICtk():
         self.feed_frame.set_appearance_mode('dark')
         self.empty_space = customtkinter.CTkLabel(self.dashboard, text="", bg_color="#2A2D2E",
          fg_color="#2A2D2E", width=210)
+        
 
         print(str(self.dashboard.bg_color) + "                      " + str(self.dashboard.fg_color))
 
@@ -55,10 +56,10 @@ class GUICtk():
 
 
         # Store all frames in a frames list for future reference (see fetch_info function above.)
-        self.frames = [self.dashboard, self.feed_frame, self.topic_frame]
+        self.frames = [self.dashboard, self.feed_frame, self.topic_frame, self.new_topic_frame]
 
         self.init_feed_frame()
-
+        self.new_topic_frame.tkraise()
         self.window.mainloop()
 
 
@@ -121,6 +122,7 @@ class GUICtk():
     # Delete a topic.
     def delete_topic(self, title: str):
         if Logic.delete_topic(title):
+            print("Delete successful")
             self.init_feed_frame()
         else:
             fail_msg = customtkinter.CTkToplevel(self.window, height = 250, width = 250)
