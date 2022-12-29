@@ -23,9 +23,3 @@ class Topic():
         
         # Switch back to main directory.
         os.chdir('..')
-        
-    # Delete all files in topic, and topic folder.
-    def delete(self) -> bool:
-        
-        shutil.rmtree(self.path)
-        return True

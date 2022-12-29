@@ -11,15 +11,17 @@ customtkinter.set_default_color_theme("blue")
 
 class GUICtk():
     
-    WIDTH = 500
-    HEIGHT = 500
+
     
     def __init__(self, CTk):
+         # Define window size variables.
+         self.WIDTH = 500
+         self.HEIGHT = 500         
          
          # Create instance of Window.            
          self.window = CTk()
          self.window.title("TRISearch")
-         self.window.geometry(f"{GUICtk.WIDTH}x{GUICtk.HEIGHT}")
+         self.window.geometry(f"{self.WIDTH}x{self.HEIGHT}")
          self.window.resizable(True, True)
          self.window.grid_columnconfigure(0, weight = 1)
          self.window.grid_rowconfigure(0, weight = 1)
@@ -64,18 +66,20 @@ class GUICtk():
     
     # Initialization method for feed frame.
     def init_feed(self):
-        self.frames["feed"].place(x = 20, y = 30)
-        topic_buttons = []
+        self.frames["feed"].place(x = 20, y = 60)
         
-        X = 20
-        Y = 50
+        ####################################
+        ########## NEW CODE ################
+        ####################################
+        
+        topics = {}
+        X = 0
+        Y = 100
         
         for index, title in enumerate(Logic.db.list_collection_names()):
-            topic_buttons.append([CTkButton(master = self.frames["feed"], text = title, text_font = ("Montserrat", 10, "bold")), 
-                                  CTkButton(master = self.frames["feed"], text = "-", text_font = ("Montserrat", 10, "bold"), fg_color = "red",
-                                            command = lambda arg = title: self.remove_topic(arg))])
-            topic_buttons[index][0].place(x = X, y = 50 + index * Y, width = 100)
-            topic_buttons[index][1].place(x = 425, y = 50 + index * Y, width = 45)
+            topics[title] = Topic_Frame(master = self.frames["feed"], x = X, y = index * Y, width  = self.WIDTH, title = title)
+        
+        ####################################
             
             
     
@@ -149,8 +153,7 @@ class GUICtk():
         self.init_feed()
         self.frames["dashboard"].tkraise()
     
-    def remove_topic(self, title: str):
-        print(title)
+    def remove_topic(self, title: str, topic_buttons: list[list[CTkButton]]):
         
         original_len = len(Logic.db.list_collection_names())
         remover = threading.Thread(target = Logic.remove_topic, args = [title])
@@ -160,9 +163,18 @@ class GUICtk():
         # This is so we can know precisely when during the run of the remover thread we should call self.init_feed().
         while(original_len == len(Logic.db.list_collection_names())):
             continue
+
+        index = 0
+        for button_set in topic_buttons:
+            if button_set[0].text == title:
+                break
+            index += 1
+        self.frames["feed"].children["!ctkbutton" + str(index + 2)].destroy()
+        print(self.frames["feed"].children)
+        self.frames["feed"].children["!ctkbutton" + str(index + 3)].destroy()
+            
         
         self.init_feed()
-        
     
     ##########################################################################################
     ################################### Auxiliary methods. ###################################
@@ -171,7 +183,7 @@ class GUICtk():
     # Receives string of keywords entered by the user in the keywords_entry widget in the new_topic frame.
     # Returns the keywords as a list, separating them according to commas in input.
     def format_keywords(self, keywords: str) -> list:
-        return keywords.split(',')  
+        return keywords.split(',')
     
     # Receives list of CTkCheckbox instances.
     # Returns the list of the text values of the checkboxes that were checked.
@@ -179,7 +191,6 @@ class GUICtk():
         checked = []
         for checkbox in source_checks:
             if source_checks[checkbox].variable.get():
-                print(source_checks[checkbox].text)
                 checked.append(source_checks[checkbox].text)
         return checked
         
@@ -187,4 +198,25 @@ class GUICtk():
     def organize_input(self, title: str, keywords: str, source_checks: list[CTkCheckBox]):
         self.add_topic(title, self.format_keywords(keywords), self.checked_sources(source_checks))
      
+
+class Topic_Frame(CTkFrame):
+    def __init__(self, **kwargs):
+        super().__init__(kwargs["master"])
+        
+        # Keep Topic_Frame width and height constants.
+        self.WIDTH = kwargs["width"] - 35
+        self.HEIGHT = 80
+        
+        CTkFrame.__init__(self, master = kwargs["master"], width = self.WIDTH, height = self.HEIGHT, fg_color = "#1A1B1C")
+        self.place(x = kwargs["x"], y = kwargs["y"])
+        
+        self.master = kwargs["master"]
+        
+        self.title = CTkLabel(self, text = kwargs["title"], text_font = ("Montserrat", 10, "bold"), width = 30)
+        self.title.place(x = 20, y = 5)
+        
+        delete_image = PhotoImage(file = "C:/Users/Ezra/VSCode/TRISearch/Resources/delete_button_image.png")
+        self.delete = CTkButton(master = self, text = "", image = delete_image, fg_color = "#1A1B1C", bg_color = "#1A1B1C", width = 0)
+        self.delete.place(x = self.WIDTH - 35, y = 5)
+
 gui = GUICtk(CTk)
