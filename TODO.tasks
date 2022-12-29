@@ -1,0 +1,13 @@
+GUI:
+    - Add functionality for delete button in Topic_Frames.
+    - Add labels within Topic_Frame, based on titles of information files.
+    - Bind Button1 press on each Topic_Frame, that leads to View_Frame. Don't add functionality to View_Frame for now.
+    - Break up Frames into their own classes so there're 5 classes: Dashboard, Feed, Topic, New_Topic, View_Topic.
+    - Add Refresh button for Feed frame, to allow user to update the feed when a new frame is created.
+    - Add Refresh button for Topic frame, allowing user to request renewal of information files retrieved for specific topic. Make sure to delete previous files from device.
+    - After all the above is done, and bugs are fixed, add functionality and design to View_Topic frame.
+
+Logic:
+    - Add web scraping functionality to other sources listed as options for user in the GUI during topic creation.
+    - Add functionality to list of sources received from GUI during add_topic function execution, so that information is received from sources selected by user.
+    - Manage simulataneous topic additions wihtout directory collision, leading to nested information directories.
