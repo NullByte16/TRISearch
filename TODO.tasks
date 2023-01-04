@@ -1,11 +1,13 @@
 GUI:
-    - Add functionality for delete button in Topic_Frames.
+    - Break up Frames into their own classes so there're 5 classes: Dashboard, Feed, Topic, New_Topic, View_Topic. @done
+    - Add functionality for delete button in Topic frame. @done
+    - Add Refresh button for Feed frame, to allow user to update the feed when a new frame is created. Try to animate it.
     - Add labels within Topic_Frame, based on titles of information files.
     - Bind Button1 press on each Topic_Frame, that leads to View_Frame. Don't add functionality to View_Frame for now.
-    - Break up Frames into their own classes so there're 5 classes: Dashboard, Feed, Topic, New_Topic, View_Topic.
-    - Add Refresh button for Feed frame, to allow user to update the feed when a new frame is created.
     - Add Refresh button for Topic frame, allowing user to request renewal of information files retrieved for specific topic. Make sure to delete previous files from device.
-    - After all the above is done, and bugs are fixed, add functionality and design to View_Topic frame.
+    - After all the above is done, and bugs are fixed, add functionality and design to View_Topic frame. Topic event listener will call function in manager class,
+        with the topic title as an argument. The GUIManager class will then call a function in View_Topic with title as an argument, that displaus all necessary widgets, and finally
+        GUIManager will call show function to raise View_Topic frame to the top of the stack.
 
 Logic:
     - Add web scraping functionality to other sources listed as options for user in the GUI during topic creation.

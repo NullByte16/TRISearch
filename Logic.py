@@ -19,11 +19,11 @@ def fetch(arg: str) -> list:
 
     return names
 
-def add_topic(title: str, keywords: list, sources: list):
-    if sources == []:
+def add_topic(*args):
+    if args[2] == []:
         return None
-    topic = Topic(title, keywords, sources)
-    col = db[title]
+    topic = Topic(args[0], args[1], args[2])
+    col = db[args[0]]
     docs = []
     for info in topic.research.infos:
         docs.append({
@@ -34,20 +34,9 @@ def add_topic(title: str, keywords: list, sources: list):
             "File": info.file
         })
     col.insert_many(docs)
-    
-"""def remove_topic(title: str) -> bool:
-    for_deletion = topics[title]
-    if for_deletion.delete():
-        db.drop_collection(title)
-        topics.pop(title)
-        if not db.list_collection_names().__contains__(for_deletion):
-            return True
-    return False"""
 
 # Delete all files in topic, and topic folder.
 def remove_topic(title: str) -> bool:
-    print(db.list_collection_names())
     db.drop_collection(title)    
-    print(db.list_collection_names())
     shutil.rmtree(f"{os.getcwd()}\\{title}")
     return True
