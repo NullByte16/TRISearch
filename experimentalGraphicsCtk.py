@@ -87,7 +87,7 @@ class GUICtk(CTk):
         self.show(name = "view_topic")
         print(title)
         
-    # Event handler for managing the refresh of Feed frame when update_frame is shown.
+    # Event handler for managing the refresh of Feed frame when update_button is shown.
     def present_refresh(self, event: Event, update_var: bool):
         if event.x >= 200 and event.x <= 300 and event.y >= 10 and event.y <= 90 and update_var:
             self.frames["dashboard"].refresh()
@@ -131,7 +131,7 @@ class Topic(CTkFrame):
         
         delete_image = PhotoImage(file = r"C:/Users/Ezra/VSCode/TRISearch/Resources/delete_button_image.png")
         self.delete = CTkButton(master = self, text = "", image = delete_image, fg_color = "#1A1B1C", bg_color = "#1A1B1C", width = 0, hover_color = self.FG_COLOR,
-                                command = lambda: self.master.remove_topic(self.title.text))
+                                command = lambda: self.winfo_toplevel().remove_topic(self.title.text))
         self.delete.place(x = self.WIDTH - 35, y = 5)
         
         
@@ -169,21 +169,19 @@ class Feed(CTkFrame):
     
     # Empties topics dictionary and reinitializes the topics in the frame. Used to renew topic list in the dashboard when adding or deleting topics.
     def refresh(self):
-        self.topics = {}
-        self.init_widgets()
+        if not self.master.update_var:
+            self.destroy()
+            self.init_widgets()
+        if self.master.update_var:
+            print("Post - Update Destruction")
+            reverse_thread = threading.Thread(target = lambda: (self.master.reverse_update_button(), self.destroy(), self.init_widgets()))
+            reverse_thread.start()
     
     # Destroy the Topic object that has the given title.
     def destroy(self):
         for topic in self.topics.keys():
             self.topics[topic].destroy()
-    # ADD COMMENTS
-    def is_topic_pressed(self, event):
-        x = event.x
-        y = event.y
-        for topic in self.topics.keys():
-            if x > self.topics[topic].x and x < self.topics[topic].x + self.topics[topic].cget("height") and y > self.topics[topic].y and y < self.topics[topic].y + self.topics[topic].width:
-                self.master.show("view_topic")
-                return None
+            
 
 # Dashboard frame class. Manages the dashboard. Contains the Feed. Maintains all operations that occur in the dashboard.        
 class Dashboard(CTkFrame):
@@ -209,15 +207,16 @@ class Dashboard(CTkFrame):
         feed_label = CTkLabel(master = self, text = "Feed:", text_font = ("Montserrat", 15, "bold"))
         feed_label.place(x = 20, y = 10)
         
-        new_topic_button = CTkButton(master = self, text = "+", text_font = ("Montserrat", 10), command = lambda: self.master.show(name = "new_topic"))
+        new_topic_button = CTkButton(master = self, text = "+", text_font = ("Montserrat", 10),
+                                     command = lambda: self.winfo_toplevel().show(name = "new_topic"))
         new_topic_button.place(x = 440, y = 10, width = 55)
         
         # Initialize Feed frame object. Called with self so it can be accessed by other methods of Dashboard.
         self.feed = Feed(master = self, fg_color = fg_color, width = self.WIDTH, height = self.HEIGHT, manager = self.master)
         
-        # Initialize the update_frame button widget.
-        self.update_frame = CTkFrame(master = self, width = 0, height = 0, fg_color = "white", bg_color = self.bg_color)
-        self.update_frame.place(x = 200, y = 0)
+        # Initialize the update_button button widget.
+        self.update_button = CTkButton(master = self, text = "", width = 0, height = 40, fg_color = "white", bg_color = None,
+                                       command = self.feed.refresh)
         self.update_var = False
     
     # This method simply calls the Feed.refresh() method.
@@ -231,23 +230,41 @@ class Dashboard(CTkFrame):
         self.feed.destroy()
     
     def present_refresh(self):
-        self.update_frame.configure(width = 100)
+        self.update_button.place(x = 200, y = -40)
+        self.update_button.configure(width = 100)
         
-        while self.update_frame.cget("height") <= 40:
-            self.update_frame.configure(height = self.update_frame.cget("height") + 1)
-            self.master.window.after(0) 
+        #while self.update_button.cget("height") <= 40:
+        #    self.update_button.configure(height = self.update_button.cget("height") + 1)
+        #    self.winfo_toplevel().after(0) 
+        y2 = -40
+        while y2 < 15:
+            self.update_button.place(x = 200, y = y2 + 1)
+            y2 += 1
 
-        y = 0
-        while y < 15:
-            y += 1
-            self.update_frame.place(x = 200, y = y)
-            self.master.window.after(0)
+        y2 = 0
+        while y2 > 10:
+            y2 -= 1
+            self.update_button.place(x = 200, y = y2)
+            self.winfo_toplevel().after(0)
 
-        while y > 10:
-            y -= 1
-            self.update_frame.place(x = 200, y = y)
-            self.master.window.after(1)
         self.update_var = True
+        
+    def reverse_update_button(self):
+        
+        self.update_var = False
+        y2 = 10
+        while y2 < 15:
+            y2 += 1
+            self.update_button.place(x = 200, y = y2)
+            self.winfo_toplevel().after(0)
+        
+        while y2 > -40:
+            y2 -= 1
+            self.update_button.place(x = 200, y = y2)
+            self.winfo_toplevel().after(0)
+        
+        self.update_button.configure(width = 0)
+        self.update_button.place_forget()
 
 # New Topic frame class. Manages the new_topic frame, and collecting input for creating new topics.        
 class New_Topic(CTkFrame):
@@ -281,7 +298,7 @@ class New_Topic(CTkFrame):
         source_vars = [] # List of booleanVar variables to check if checkboxes are checked or not.v--> EXPERIMENTAL CODE
         
         # Back button. Returns user to dashboard frame.
-        back = CTkButton(master = self, text = "Back", text_font = ("Monserrat", 10), command = lambda: self.master.show(name = "dashboard"))
+        back = CTkButton(master = self, text = "Back", text_font = ("Monserrat", 10), command = lambda: self.winfo_toplevel().show(name = "dashboard"))
         back.place(x = 20, y = 10, width = 70)
         
         # Initialize label and entry widgets for the title and keywords of the new topic.
@@ -348,7 +365,7 @@ class View_Topic(CTkFrame):
         view_label = CTkLabel(master = self, text = "View Topic")
         view_label.place(x = 20, y = 10)
         
-        back_button = CTkButton(master = self, text = "Back", command = lambda: self.master.show("dashboard"))
+        back_button = CTkButton(master = self, text = "Back", command = lambda: self.winfo_toplevel().show("dashboard"))
         back_button.place(x = 20, y = 200)
         
 gui = GUICtk()
