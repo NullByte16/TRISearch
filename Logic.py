@@ -19,6 +19,10 @@ def fetch(arg: str) -> list:
 
     return names
 
+def pass_infos(title: str) -> list[dict]:
+    return db[title].find()
+        
+
 def add_topic(*args):
     if args[2] == []:
         return None

@@ -84,8 +84,8 @@ class GUICtk(CTk):
     
     # Raises view_topic and presents the specific information required for the selected topic.
     def view(self, title):
+        self.frames["view_topic"].show_infos(title = title)
         self.show(name = "view_topic")
-        print(title)
         
     # Event handler for managing the refresh of Feed frame when update_button is shown.
     def present_refresh(self, event: Event, update_var: bool):
@@ -214,9 +214,10 @@ class Dashboard(CTkFrame):
         # Initialize Feed frame object. Called with self so it can be accessed by other methods of Dashboard.
         self.feed = Feed(master = self, fg_color = fg_color, width = self.WIDTH, height = self.HEIGHT, manager = self.master)
         
+        update_image = PhotoImage(file = r"C:/Users/Ezra/VSCode/TRISearch/Resources/update_unsized.png")
         # Initialize the update_button button widget.
-        self.update_button = CTkButton(master = self, text = "", width = 0, height = 40, fg_color = "white", bg_color = None,
-                                       command = self.feed.refresh)
+        self.update_button = CTkButton(master = self, text = "Update", text_color = "black", width = 0, height = 40, fg_color = "white", bg_color = None,
+                                       image = update_image, command = self.feed.refresh)
         self.update_var = False
     
     # This method simply calls the Feed.refresh() method.
@@ -235,13 +236,16 @@ class Dashboard(CTkFrame):
         
         #while self.update_button.cget("height") <= 40:
         #    self.update_button.configure(height = self.update_button.cget("height") + 1)
-        #    self.winfo_toplevel().after(0) 
+        #    self.winfo_toplevel().after(0)
+        
+        self.update_button.configure(fg_color = "white")
+        
         y2 = -40
         while y2 < 15:
             self.update_button.place(x = 200, y = y2 + 1)
+            self.winfo_toplevel().after(0)
             y2 += 1
 
-        y2 = 0
         while y2 > 10:
             y2 -= 1
             self.update_button.place(x = 200, y = y2)
@@ -256,7 +260,7 @@ class Dashboard(CTkFrame):
         while y2 < 15:
             y2 += 1
             self.update_button.place(x = 200, y = y2)
-            self.winfo_toplevel().after(0)
+            self.winfo_toplevel().after(1)
         
         while y2 > -40:
             y2 -= 1
@@ -363,9 +367,23 @@ class View_Topic(CTkFrame):
     # Initialize the widgets in this frame.
     def init_widgets(self):
         view_label = CTkLabel(master = self, text = "View Topic")
-        view_label.place(x = 20, y = 10)
+        view_label.place(x = 200, y = 10)
         
         back_button = CTkButton(master = self, text = "Back", command = lambda: self.winfo_toplevel().show("dashboard"))
-        back_button.place(x = 20, y = 200)
+        back_button.place(x = 20, y = 10)
+    
+    # Recevies the title of the topic to be showm. Presents all stored information items on the GUI.
+    # Calls Logic.pass_infos(), which extracts all infromation items from database.
+    def show_infos(self, title):
+        info_cursor = Logic.pass_infos(title = title)
+        info_buttons = {}
+        
+        X = 20
+        Y = 100
+        for index, info in enumerate(info_cursor):
+            info_buttons[info["Name"]] = CTkButton(master = self, text = info["Name"], text_font = ("Montserrat", 10, "bold"), fg_color = "#1A1B1C", bg_color = None, hover_color = None,
+                                                   width = 460, height = 80).place(x = X, y = index * Y + Y)
+            image_button = CTkButton(master = self, text = "", fg_color = "#1A1B1C", bg_color = "#1A1B1C", width = 40, height = 80, hover_color = None,
+                                     image = PhotoImage(file = info["Thumbnail"])).place(x = X + 5, y = index * Y + Y)
         
 gui = GUICtk()
