@@ -1,5 +1,6 @@
 from Info import Info
 import requests
+import os
 import shutil
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -7,6 +8,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from requests_html import HTMLSession
+from PIL import Image
 
 options = Options()
 options.add_argument("headless")
@@ -43,6 +45,15 @@ class Research():
 
             with open(filename, 'wb') as f:
                 shutil.copyfileobj(r.raw, f)
+                
+            with Image.open(filename) as image:
+                resized = image.resize(size = (60, 34))
+             
+            os.remove(filename)
+            filename = filename.split(".")[0] + ".png"
+            resized.save(filename)
+                
+                
             if shutil.sys.platform.__contains__("win"):
                 return shutil.os.getcwd() + "\\" + filename
             return shutil.os.getcwd() + "/" + filename
@@ -113,8 +124,8 @@ class Research():
                         Info(video.find_element(By.ID, "video-title").get_attribute("title"),
                                            self.retrieve_image(video.find_element(By.ID, "video-title").get_attribute("title"), video.find_element(By.TAG_NAME, "img").get_attribute("src")),
                                            video.find_element(By.ID, "video-title").get_attribute("href"),
-                                           type="video",
-                                           file=self.retrieve_image(video.find_element(By.ID, "video-title").get_attribute("title"), video.find_element(By.TAG_NAME, "img").get_attribute("src"))))
+                                           type = "video",
+                                           file = self.retrieve_image(video.find_element(By.ID, "video-title").get_attribute("title"), video.find_element(By.TAG_NAME, "img").get_attribute("src"))))
 
     def scrape_vid_b(self):
         videos = []
